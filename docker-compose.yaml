@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "!asdf1234"
+      MYSQL_DATABASE: "fullcycle"
+    ports:
+     - 3306:3306
+
+  api:
+    build: .
+    working_dir: /usr/src/app
+    restart: always
+    command: bash -c "npm i && npm start"
+    volumes:
+      - ./index.mjs:/usr/src/app/index.mjs
+      - ./package.json:/usr/src/app/package.json
+    ports:
+      - 3000:3000
+    depends_on:
+      - database
+    entrypoint: dockerize --wait tcp://database:3306
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 8000:80
